@@ -1,53 +1,35 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableHighlight } from 'react-native';
+import { Text, View, TextInput, TouchableHighlight, StatusBar } from 'react-native';
+import styles from '../Styles';
+
+import FloatingLabelInput from '../components/FloatingLabelInput';
 
 export default class GetAddressScreen extends Component {
   constructor(props) {
     super(props);
+    this.goToTimeScreen = this.goToTimeScreen.bind(this);
     this.state = {
-      origin: '',
       destination: ''
     }
   }
+
   render() {
     return (
       <View style={styles.container}>
-        <View style={styles.addressInputContainer}>
-          <TextInput style={styles.addressInput} placeholder="Origin" onChangeText={(text) => this.setState({origin})} />
-          <TextInput style={styles.addressInput} placeholder="Destination" onChangeText={(text) => this.setState({destination})} />
+        <View style={styles.inputContainer}>
+          <StatusBar hidden />
+          <FloatingLabelInput label="Enter your destination" value={this.state.destination} onChangeText={this.handleTextChange} />
         </View>
-        <View style={styles.sendButtonContainer}>
-          <TouchableHighlight style={styles.sendButton} onPress={this.sendInfo}>
-            <Text>Next</Text>
+        <View style={styles.buttonContainer}>
+          <TouchableHighlight style={styles.sendButton} onPress={this.goToTimeScreen}>
+            <Text style={styles.sendButtonText}>Next</Text>
           </TouchableHighlight>
         </View>
       </View>
     );
   }
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addressInputContainer: {
-    flex: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addressInput: {
-    height: 40,
-    justifyContent: 'center',
-    marginTop: 50
-  },
-  sendButtonContainer: {
-    flex: 3
-  },
-  sendButton: {
-    backgroundColor: '#eee',
-    padding: '5%',
+  handleTextChange = (newText) => this.setState({ destination: newText });
+  goToTimeScreen() {
+    this.props.navigation.navigate('GetTimeScreen', {destination: this.state.destination});
   }
-});
+}
