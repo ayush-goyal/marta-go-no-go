@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Text, View, TextInput, TouchableHighlight, StatusBar } from 'react-native';
+import { Text, View, TextInput, TouchableHighlight, StatusBar, NativeModules } from 'react-native';
 import styles from '../Styles';
 
 import FloatingLabelInput from '../components/FloatingLabelInput';
@@ -29,7 +29,8 @@ export default class GetTimeScreen extends Component {
       var location = responseJson.results[0].geometry.location;
       this.setState({destination: {
         latitude: location.lat,
-        longitude: location.lng
+        longitude: location.lng,
+        formatted: responseJson.results[0].formatted_address
       }})
     })
     .catch((error) => {
@@ -38,15 +39,26 @@ export default class GetTimeScreen extends Component {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        this.setState({origin: {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          error: null,
-        }});
+        var originFormattedURL = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&key=AIzaSyAg_5ujfAGXd9EXVbOGguQJ05B9nosQbIc`;
+        
+        fetch(originFormattedURL)
+        .then((response) => response.json())
+        .then((responseJson) => {
+          console.log(responseJson);
+          this.setState({origin: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            formatted: responseJson.results[0].formatted_address
+          }})
+        })
+        .catch((error) => {
+          console.error(error);
+        });
       },
       (error) => console.log(error),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
     );
+
   }
 
   render() {
@@ -75,15 +87,34 @@ export default class GetTimeScreen extends Component {
     var timeMilliseconds = Date.parse(dateString);
     console.log(timeMilliseconds);
 
+    console.log(this.state);
+    var originLatitude = (this.state.origin.latitude).toFixed(7);
+    var originLongitude = (this.state.origin.longitude).toFixed(7);
+    var formattedOrigin = this.state.origin.formatted;
+    var destinationLatitude = (this.state.destination.latitude).toFixed(7);
+    var destinationLongitude = (this.state.destination.longitude).toFixed(7);
+    var formattedDestination = this.state.destination.formatted;
+
+    var requestURL = `localhost:3000?originLatitude=${originLatitude}&originLongitude=${originLongitude}&destinationLatitude=${destinationLatitude}&destinationLongitude=${destinationLongitude}&time=${timeMilliseconds}`;
 
     // Fetch to get yes or no
-    /* return fetch('')
-    .then((response) => {
-      // var useMarta;
-    })
+    /* return fetch(requestURL)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      console.log(responseJson.useMarta);
+    }
     .catch((error) => {
       console.error(error);
     }); */
+
+    var AppChanger = NativeModules.AppChanger;
+    AppChanger.changeToLyft();
+
+
+    var changeToMapsURL = `comgooglemaps://?saddr=${formattedOrigin}&daddr=${formattedDestination}&directionsmode=transit`;
+
+    AppChanger.changeToMaps(changeToMapsURL);
+
 
     var useMarta = false;
     if (useMarta == true) {
